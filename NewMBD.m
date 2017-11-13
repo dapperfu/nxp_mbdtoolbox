@@ -1,12 +1,8 @@
 function varargout = NewMBD(opts)
-% NEWMBD - Script to programatically build a new basic model for the 
-%	DescriptionLine1
-%	DescriptionLine2
-%	DescriptionLine3
-%	DescriptionLine4
+% NEWMBD - Script to programatically create a new basic MBD model.
 %
 % Syntax:
-%	NewMBD()
+%	NewMBD(options)
 %
 % Inputs:
 %	options - Structure with input options.
@@ -17,12 +13,13 @@ function varargout = NewMBD(opts)
 %   Otherwise: No output.
 %
 % Example:
-%	NewMBD()
+%	NewMBD;
 %
-%   opts = NewMBD()
+%   opts = NewMBD;
 %   opts.model_name = "NewModel"
 %   NewMBD(opts)
 %
+%   opts = NewMBD;
 
 % Author: Jed Frey
 % June 2017
@@ -31,6 +28,8 @@ function varargout = NewMBD(opts)
 
 % Model name
 defaults.model_name='mbdModel';
+% Make new directory
+defaults.mkdir=true;
 % Create init script
 defaults.create_init=true;
 % Create build script
@@ -40,7 +39,12 @@ defaults.target='mbd_pnt.tlc';
 % Target MCU
 defaults.target_mcu='MPC5744P';
 % Location to S32 install directory.
-defaults.S32_root = 'C:\Freescale\S32_Power_v1.1';
+defaults.S32_root = 'C:\NXP\S32DS_Power_v1.2';
+% Build model after creation
+defaults.build = true;
+%
+defaults.redstone = 'Aerospace';
+defaults.safety = 'DO-178C';
 
 % If no inputs and only 1 output return the default options.
 % Used to easily get a struct of what is available.
@@ -71,6 +75,11 @@ end
 % Get the model name from the options.
 % First converting it into a valid matlab name, if it isn't already.
 mdl = matlab.lang.makeValidName(opts.model_name);
+% Make a new directory for the model.
+if opts.mkdir
+    mkdir(mdl);
+    cd(mdl);
+end
 % Create a new model.
 mdl_h = new_system(mdl);
 % Open the model
@@ -144,7 +153,14 @@ if opts.create_build
     build_out=sprintf('%s_build.m',get_param(mdl,'name'));
     fid=fopen(build_out, 'w');
     fprintf(fid,'cd(fileparts(mfilename(''fullpath'')))\n');
+    fprintf(fid,'open_system(''%s'');', mdl);
+    fprintf(fid,'slbuild(''%s'');', mdl);
     fclose(fid);
+end
+% Build, if asked.
+if opts.build
+   run(init_out);
+   run(build_out); 
 end
 %------------- END CODE ----------------
 

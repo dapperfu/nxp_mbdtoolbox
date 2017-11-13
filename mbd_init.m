@@ -13,8 +13,11 @@ function mbd_init(varargin)
        error('MBD_INIT:SIMULINK_OPEN', 'There are open simulink models. Please save them then run `bdclose(''all'')`.');
     end
     bdclose('all');
-    mbd_root = fileparts(mfilename('fullpath'));
-
+    if nargin<1
+        mbd_root = fileparts(mfilename('fullpath'));
+    else
+        mbd_root = varargin{1};
+    end
 % Paths to add with full subdirectories.
 recursive_paths = {
     fullfile(mbd_root, 'mbdtbx_pnt', 'src')
@@ -40,7 +43,7 @@ for bare_path = bare_paths
 end
 
 % Rehash the toolbox cache
-rehash toolboxcache;
+rehash('toolboxcache');
 % Refresh the simulink customizations.
 sl_refresh_customizations();
 start_simulink;
